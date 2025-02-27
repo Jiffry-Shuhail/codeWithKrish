@@ -16,7 +16,7 @@
 ## Order
 * Create: http://localhost:3000/orders
 
-## Sample JSON
+<h5>Sample Body JSON</h5>
 
 ```json
 {
@@ -39,7 +39,7 @@
 * FindById: http://localhost:3000/orders/<1>
 * FindAll: http://localhost:3000/orders
 * UpdateStatus: http://localhost:3000/orders/<1>/status
-## Sample JSON
+<h5>Sample Body JSON</h5>
 
 ```json
 {
@@ -51,8 +51,7 @@
 
 ## Customer
 * Create: http://localhost:3000/customers
-
-## Sample JSON
+<h5>Sample Body JSON</h5>
 
 ```json
 {
@@ -68,8 +67,7 @@
 
 ## Product
 * Create: http://localhost:3000/products
-
-## Sample JSON
+<h5>Sample Body JSON</h5>
 
 ```json
 {
