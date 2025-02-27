@@ -13,7 +13,7 @@
 
 ## End Points
 
-<h5>Order</h5>
+## Order
 * Create: http://localhost:3000/orders
 
 ## Sample JSON
@@ -49,7 +49,7 @@
 
 <hr>
 
-<h5>Customer</h5>
+## Customer
 * Create: http://localhost:3000/customers
 
 ## Sample JSON
@@ -66,7 +66,7 @@
 
 <hr>
 
-<h5>Product</h5>
+## Product
 * Create: http://localhost:3000/products
 
 ## Sample JSON
