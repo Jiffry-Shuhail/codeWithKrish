@@ -82,6 +82,29 @@
 
 ## How To Use
 
+## Configuration
+
+Modify the MySql settings in the `app.module.ts` file.
+
+```typescript
+@Module({
+  imports: [OrdersModule,TypeOrmModule.forRoot({
+    type:'mysql',
+    host:'localhost', // Update Host
+    port:3306, // Update Port 
+    username:'root', // Update Username
+    password:'******', // Add password
+    database:'cosmos', // Update Schema name
+    entities:[Order, OrderItem, Customer, Product],
+    synchronize:true //Dont use production | only on dev
+  }), CustomersModule, ProductsModule],
+})
+```
+Create a Database.
+```sql
+create database cosmos;
+```
+
 To clone and run this application, you'll need [Git](https://git-scm.com) and [Node.js](https://nodejs.org/en/download/) (which comes with [npm](http://npmjs.com)) installed on your computer. From your command line:
 
 ```bash

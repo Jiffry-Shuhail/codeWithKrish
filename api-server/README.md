@@ -5,8 +5,8 @@
 </h1>
 
 ## End Points
-* localhost:3000/number/min?num1=<value>&num2=<value>
-* localhost:3000/number/max?num1=<value>&num2=<value>
+* localhost:3000/number/min?num1=<1>&num2=<2>
+* localhost:3000/number/max?num1=<1>&num2=<2>
 * localhost:3000/number/avg?numbers=<1,2,4,6,7>
 * localhost:3000/number/sort?numbers=<1,2,4,6,7>&type=<asc|desc>
 * localhost:3000/number/count?values=<1,2,4,6,7,a,b,jiff,shu,33,1,1>&search=<1>
