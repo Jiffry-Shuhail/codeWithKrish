@@ -8,7 +8,7 @@ export class Product {
     @Column({nullable:false})
     name: string;
 
-    @Column('decimal', { precision: 10, scale: 2 })
+    @Column('decimal', { precision: 10, scale: 2, nullable:false })
     price: number;
 
     @Column({nullable:false, type:'int'})
