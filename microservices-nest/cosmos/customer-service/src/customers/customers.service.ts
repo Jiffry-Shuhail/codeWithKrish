@@ -3,7 +3,7 @@ import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Customer } from './entities/customer.entity';
-import { Repository } from 'typeorm';
+import { Like, Repository } from 'typeorm';
 
 @Injectable()
 export class CustomersService {
@@ -43,5 +43,9 @@ export class CustomersService {
     }
 
     return customer;
+  }
+
+  async querySearch(query:string):Promise<Customer[]|[]>{
+    return await this.customerRepository.find({where:{name:Like(`%${query}%`)}});
   }
 }

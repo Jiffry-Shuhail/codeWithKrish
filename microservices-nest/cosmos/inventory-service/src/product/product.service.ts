@@ -3,7 +3,7 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { Product } from './entities/product.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Like, MoreThan, Repository } from 'typeorm';
 import { retry } from 'rxjs';
 
 @Injectable()
@@ -66,5 +66,14 @@ export class ProductService {
     } else {
       throw new NotFoundException(`Product with id: ${id} is not found`);
     }
+  }
+
+  async querySearch(query:string): Promise<Product[] | []> {
+    return await this.productRepository.find({
+      where: {
+        name: Like(`%${query}%`),
+        quantity: MoreThan(0)
+      }
+    });
   }
 }

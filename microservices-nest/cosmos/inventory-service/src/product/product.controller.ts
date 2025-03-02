@@ -6,7 +6,7 @@ import { Product } from './entities/product.entity';
 
 @Controller('products')
 export class ProductController {
-  constructor(private readonly productService: ProductService) {}
+  constructor(private readonly productService: ProductService) { }
 
   @Post()
   async create(@Body() createProductDto: CreateProductDto): Promise<Product | null> {
@@ -47,8 +47,13 @@ export class ProductController {
   }
 
   @Patch(':id/reduce')
-  async updateTheQuantity(@Param('id') id: number, @Body() updateProductDto:UpdateProductDto):Promise<Product|null>{
+  async updateTheQuantity(@Param('id') id: number, @Body() updateProductDto: UpdateProductDto): Promise<Product | null> {
     return await this.productService.updateTheQuantity(id, updateProductDto);
+  }
+
+  @Get(':query/filter')
+  async querySearch(@Param('query') query: string): Promise<Product[] | []> {
+    return await this.productService.querySearch(query);
   }
 
 }

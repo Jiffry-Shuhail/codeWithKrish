@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
 import { CustomersService } from './customers.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
@@ -21,5 +21,10 @@ export class CustomersController {
   @Get(':id')
   async findOne(@Param('id') id: number):Promise<Customer|null> {
     return await this.customersService.findOne(id);
+  }
+
+  @Get(':query/filter')
+  async querySearch(@Param('query') query:string):Promise<Customer[]|[]>{
+    return await this.customersService.querySearch(query);
   }
 }

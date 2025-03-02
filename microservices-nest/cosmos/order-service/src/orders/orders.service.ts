@@ -43,6 +43,7 @@ export class OrdersService {
                     `${this.inventoryServiceUrl}/${item.productId}/validate?quantity=${item.quantity}`
                 )
                 const response=await lastValueFrom(request);
+                
                 if(!response.data.available){
                     throw new BadRequestException(`Product ID ${item.productId} is out of stock.`);
                 }
@@ -50,6 +51,8 @@ export class OrdersService {
                 throw new BadRequestException(`Error checking stock for Product ID ${item.productId}: ${error.message}`);
             }
         }
+
+        
 
         // Create object in memory
         const order = this.ordeReporsitory.create({ customerId });
