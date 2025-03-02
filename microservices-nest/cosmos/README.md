@@ -11,7 +11,7 @@
   <br>
 </h1>
 
-## Frintend React
+## Frontend React
 * URL : http://localhost:3003
 ```bash
 # Clone this repository
