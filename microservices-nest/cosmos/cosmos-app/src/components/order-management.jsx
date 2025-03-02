@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { createOrder, getAllOrders } from "../services/order-service";
+import { createOrder, getAllOrders, updateOrderStatus, cancelOrder } from "../services/order-service";
 import { findById } from "../services/customer-service";
 import { findByIdProduct } from "../services/inventory-service";
 import {
@@ -163,6 +163,42 @@ function OrderManagement() {
         setIsOpen(true);
     }
 
+    const updateOrder = async (id, status) => {
+        try {
+            const response = await updateOrderStatus(id, status);
+            if (response.data) {
+                fetchOrders();
+                validation('green', "Success!", 'Order status updated Successfully');
+            } else {
+                validation('orange', "Server Side Error", 'Opps! Opps!');
+            }
+        } catch (error) {
+            validation('orange', "Server Side Error", error.message);
+        }
+    }
+
+    const cancelOrders = async (id) => {
+        try {
+            const response = await cancelOrder(id);
+            if (response.data) {
+                fetchOrders();
+                validation('green', "Success!", 'Order is cancel Successfully');
+            } else {
+                validation('orange', "Server Side Error", 'Opps! Opps!');
+            }
+        } catch (error) {
+            validation('orange', "Server Side Error", error.message);
+        }
+    }
+
+    const handleStatusUpdate = (order) => {
+        return order.status === 'PENDING'
+            ? 'CONFIRMED'
+            : order.status === 'CONFIRMED'
+                ? 'SHIPPED'
+                : 'DELIVERED';
+    }
+
     return (
         <>
             <Container style={{ paddingTop: "20px" }}>
@@ -308,11 +344,11 @@ function OrderManagement() {
                                                             {
                                                                 (order.status !== 'CANCELLED' && order.status !== 'DELIVERED') &&
                                                                 <>
-                                                                    <Button animated='vertical' color='blue'>
+                                                                    <Button animated='vertical' color='blue'
+                                                                        onClick={() => updateOrder(order.id, handleStatusUpdate(order))}>
                                                                         <ButtonContent hidden>
                                                                             <small>
-                                                                                {order.status === 'PENDING' ? 'CONFIRMED' :
-                                                                                    order.status === 'CONFIRMED' ? 'SHIPPED' : 'DELIVERED'}
+                                                                                {handleStatusUpdate(order)}
                                                                             </small>
                                                                         </ButtonContent>
                                                                         <ButtonContent visible>
@@ -320,7 +356,7 @@ function OrderManagement() {
                                                                         </ButtonContent>
                                                                     </Button>
 
-                                                                    <Button animated='vertical' color='red'>
+                                                                    <Button animated='vertical' color='red' onClick={()=>cancelOrders(order.id)}>
                                                                         <ButtonContent hidden>Cancel</ButtonContent>
                                                                         <ButtonContent visible>
                                                                             <Icon name='cancel' />

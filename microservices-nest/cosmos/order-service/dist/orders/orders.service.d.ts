@@ -15,4 +15,5 @@ export declare class OrdersService {
     fetch(id: number): Promise<Order | null>;
     fetchAll(): Promise<Order[] | null>;
     updateOrderStatus(id: number, updateStatus: UpdateOrderStatus): Promise<Order | null>;
+    updateOrdercancel(id: number, updateStatus: UpdateOrderStatus): Promise<Order | null>;
 }

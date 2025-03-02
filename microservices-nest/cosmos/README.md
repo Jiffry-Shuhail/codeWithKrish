@@ -75,6 +75,14 @@ $ npm run start:dev
 	"status":"CONFIRMED"
 }
 ```
+* UpdateStatus: http://localhost:3000/orders/<1>/cancel
+<h5>Sample Body JSON</h5>
+
+```json
+{
+	"status":"CANCELLED"
+}
+```
 
 <hr>
 
@@ -105,6 +113,22 @@ $ npm run start:dev
 * FindById: http://localhost:3001/products/<1>
 * FindAll: http://localhost:3001/products
 * Validate: http://localhost:3001/products/<1>/validate?quantity=<23>
+* Validate: http://localhost:3001/products/<1>/reduce
+<h5>Sample Body JSON</h5>
+
+```json
+{
+    "quantity": "12"
+}
+```
+* Validate: http://localhost:3001/products/<1>/increase
+<h5>Sample Body JSON</h5>
+
+```json
+{
+    "quantity": "12"
+}
+```
 
 <hr>
 

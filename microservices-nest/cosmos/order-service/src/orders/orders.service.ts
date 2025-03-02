@@ -19,16 +19,16 @@ export class OrdersService {
         private readonly ordeReporsitory: Repository<Order>,
         @InjectRepository(OrderItem)
         private readonly orderItemsReporsitory: Repository<OrderItem>,
-        private readonly httpService:HttpService
+        private readonly httpService: HttpService
     ) { }
 
-    public async create(createOrderDto: createOrderDto): Promise<Order|null> {
+    public async create(createOrderDto: createOrderDto): Promise<Order | null> {
         const { customerId, items } = createOrderDto;
 
         try {
-            const request=this.httpService.get(`${this.customerServiceUrl}/${customerId}`);
-            const response=await lastValueFrom(request);
-            if(!response.data.id){
+            const request = this.httpService.get(`${this.customerServiceUrl}/${customerId}`);
+            const response = await lastValueFrom(request);
+            if (!response.data.id) {
                 throw new BadRequestException(`Customer ID ${customerId} is invalid.`);
             }
         } catch (error) {
@@ -37,14 +37,14 @@ export class OrdersService {
 
         // Inside the not Allow any loop|Ierator except For loop
         // So I used the For for iterating
-        for(const item of items){
+        for (const item of items) {
             try {
-                const request=this.httpService.get(
+                const request = this.httpService.get(
                     `${this.inventoryServiceUrl}/${item.productId}/validate?quantity=${item.quantity}`
                 )
-                const response=await lastValueFrom(request);
-                
-                if(!response.data.available){
+                const response = await lastValueFrom(request);
+
+                if (!response.data.available) {
                     throw new BadRequestException(`Product ID ${item.productId} is out of stock.`);
                 }
             } catch (error) {
@@ -52,7 +52,7 @@ export class OrdersService {
             }
         }
 
-        
+
 
         // Create object in memory
         const order = this.ordeReporsitory.create({ customerId });
@@ -68,16 +68,16 @@ export class OrdersService {
             })
         );
         // Save in database
-        const savedOrderItems=await this.orderItemsReporsitory.save(orderItems);
+        const savedOrderItems = await this.orderItemsReporsitory.save(orderItems);
         console.log(savedOrderItems);
 
-        for(const item of savedOrderItems){
+        for (const item of savedOrderItems) {
             try {
-                const request=this.httpService.patch(
-                    `${this.inventoryServiceUrl}/${item.productId}/reduce`, {quantity:item.quantity}
+                const request = this.httpService.patch(
+                    `${this.inventoryServiceUrl}/${item.productId}/reduce`, { quantity: item.quantity }
                 )
-                const response=await lastValueFrom(request);
-                if(!response.data.id){
+                const response = await lastValueFrom(request);
+                if (!response.data.id) {
                     throw new BadRequestException(`Product ID ${item.productId} is not found.`);
                 }
             } catch (error) {
@@ -85,36 +85,66 @@ export class OrdersService {
             }
         }
 
-        return this.ordeReporsitory.findOne({ 
-            where: { id: savedOrder.id }, 
-            relations: ['items'], 
+        return this.ordeReporsitory.findOne({
+            where: { id: savedOrder.id },
+            relations: ['items'],
         });
     }
 
-    public async fetch(id:number):Promise<Order|null>{
-        return await this.ordeReporsitory.findOne({ 
-            where: { id}, 
-            relations: ['items'], 
+    public async fetch(id: number): Promise<Order | null> {
+        return await this.ordeReporsitory.findOne({
+            where: { id },
+            relations: ['items'],
         });
     }
 
-    public async fetchAll():Promise<Order[]|null>{
-        return await this.ordeReporsitory.find({ 
-            relations: ['items'], 
+    public async fetchAll(): Promise<Order[] | null> {
+        return await this.ordeReporsitory.find({
+            relations: ['items'],
         });
     }
 
-    public async updateOrderStatus(id:number, updateStatus:UpdateOrderStatus):Promise<Order|null>{
-        const order=await this.ordeReporsitory.findOne({ where: { id}});
-        if(!order){
+    public async updateOrderStatus(id: number, updateStatus: UpdateOrderStatus): Promise<Order | null> {
+        const order = await this.ordeReporsitory.findOne({ where: { id } });
+        if (!order) {
             throw new NotFoundException(`order with id: ${id} is not found`);
         }
 
-        if(order.status === OrderStatus.DELIVERED || order.status === OrderStatus.CANCELLED){
+        if (order.status === OrderStatus.DELIVERED || order.status === OrderStatus.CANCELLED) {
             throw new BadRequestException(`order status cannot be changed when its delivered or cancelled`);
         }
 
-        order.status=updateStatus.status;
+        order.status = updateStatus.status;
+
+        return await this.ordeReporsitory.save(order);
+    }
+
+    public async updateOrdercancel(id: number, updateStatus: UpdateOrderStatus): Promise<Order | null> {
+        const order = await this.ordeReporsitory.findOne({ where: { id }, relations: ['items'] });
+        if (!order) {
+            throw new NotFoundException(`order with id: ${id} is not found`);
+        }
+
+        if (order.status !== OrderStatus.CANCELLED) {
+            order.status = updateStatus.status;
+            for (const item of order.items) {
+                try {
+                    const request = this.httpService.patch(
+                        `${this.inventoryServiceUrl}/${item.productId}/increase`, { quantity: item.quantity }
+                    )
+                    const response = await lastValueFrom(request);
+                    if (!response.data.id) {
+                        throw new BadRequestException(`Product ID ${item.productId} is not found.`);
+                    }
+                } catch (error) {
+                    throw new BadRequestException(`Error checking stock reduing for Product ID ${item.productId}: ${error.message}`);
+                }
+            }
+        } else {
+            throw new BadRequestException(`order status cannot be changed when its delivered`);
+        }
+
+
 
         return await this.ordeReporsitory.save(order);
     }

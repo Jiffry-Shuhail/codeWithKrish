@@ -51,6 +51,11 @@ export class ProductController {
     return await this.productService.updateTheQuantity(id, updateProductDto);
   }
 
+  @Patch(':id/increase')
+  async updateTheIncreaseQuantity(@Param('id') id: number, @Body() updateProductDto: UpdateProductDto): Promise<Product | null> {
+    return await this.productService.updateTheIncreaseQuantity(id, updateProductDto);
+  }
+
   @Get(':query/filter')
   async querySearch(@Param('query') query: string): Promise<Product[] | []> {
     return await this.productService.querySearch(query);

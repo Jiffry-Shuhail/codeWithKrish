@@ -34,6 +34,9 @@ let OrdersController = class OrdersController {
     async updateOrderStatus(id, updateOrderStatus) {
         return await this.orderService.updateOrderStatus(id, updateOrderStatus);
     }
+    async updateOrdercancel(id, updateOrderStatus) {
+        return await this.orderService.updateOrdercancel(id, updateOrderStatus);
+    }
 };
 exports.OrdersController = OrdersController;
 __decorate([
@@ -64,6 +67,14 @@ __decorate([
     __metadata("design:paramtypes", [Number, update_order_dto_1.UpdateOrderStatus]),
     __metadata("design:returntype", Promise)
 ], OrdersController.prototype, "updateOrderStatus", null);
+__decorate([
+    (0, common_1.Patch)(':id/cancel'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, update_order_dto_1.UpdateOrderStatus]),
+    __metadata("design:returntype", Promise)
+], OrdersController.prototype, "updateOrdercancel", null);
 exports.OrdersController = OrdersController = __decorate([
     (0, common_1.Controller)('orders'),
     __metadata("design:paramtypes", [orders_service_1.OrdersService])

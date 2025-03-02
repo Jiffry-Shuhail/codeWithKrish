@@ -68,6 +68,20 @@ export class ProductService {
     }
   }
 
+  async updateTheIncreaseQuantity(id: number, updateProductDto: UpdateProductDto): Promise<Product|null> {
+
+    if(!updateProductDto.quantity){
+      throw new NotFoundException(`Quantity Body Parameter is Undefined`);
+    }
+    const product = await this.findOne(id);
+    if (product) {
+      product.quantity+=updateProductDto.quantity;
+      return await this.productRepository.save(product);
+    } else {
+      throw new NotFoundException(`Product with id: ${id} is not found`);
+    }
+  }
+
   async querySearch(query:string): Promise<Product[] | []> {
     return await this.productRepository.find({
       where: {

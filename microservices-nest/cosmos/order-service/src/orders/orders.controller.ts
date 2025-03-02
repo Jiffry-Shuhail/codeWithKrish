@@ -28,4 +28,9 @@ export class OrdersController {
     async updateOrderStatus(@Param('id') id:number, @Body() updateOrderStatus:UpdateOrderStatus):Promise<Order|null>{
         return await this.orderService.updateOrderStatus(id, updateOrderStatus);
     }
+
+    @Patch(':id/cancel')
+    async updateOrdercancel(@Param('id') id:number, @Body() updateOrderStatus:UpdateOrderStatus):Promise<Order|null>{
+        return await this.orderService.updateOrdercancel(id, updateOrderStatus);
+    }
 }

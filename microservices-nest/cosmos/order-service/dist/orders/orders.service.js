@@ -103,6 +103,31 @@ let OrdersService = class OrdersService {
         order.status = updateStatus.status;
         return await this.ordeReporsitory.save(order);
     }
+    async updateOrdercancel(id, updateStatus) {
+        const order = await this.ordeReporsitory.findOne({ where: { id }, relations: ['items'] });
+        if (!order) {
+            throw new common_1.NotFoundException(`order with id: ${id} is not found`);
+        }
+        if (order.status !== update_order_dto_1.OrderStatus.CANCELLED) {
+            order.status = updateStatus.status;
+            for (const item of order.items) {
+                try {
+                    const request = this.httpService.patch(`${this.inventoryServiceUrl}/${item.productId}/increase`, { quantity: item.quantity });
+                    const response = await (0, rxjs_1.lastValueFrom)(request);
+                    if (!response.data.id) {
+                        throw new common_1.BadRequestException(`Product ID ${item.productId} is not found.`);
+                    }
+                }
+                catch (error) {
+                    throw new common_1.BadRequestException(`Error checking stock reduing for Product ID ${item.productId}: ${error.message}`);
+                }
+            }
+        }
+        else {
+            throw new common_1.BadRequestException(`order status cannot be changed when its delivered`);
+        }
+        return await this.ordeReporsitory.save(order);
+    }
 };
 exports.OrdersService = OrdersService;
 exports.OrdersService = OrdersService = __decorate([

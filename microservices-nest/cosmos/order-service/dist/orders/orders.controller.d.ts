@@ -9,4 +9,5 @@ export declare class OrdersController {
     fetch(id: number): Promise<Order | null>;
     fetchAll(): Promise<Order[] | null>;
     updateOrderStatus(id: number, updateOrderStatus: UpdateOrderStatus): Promise<Order | null>;
+    updateOrdercancel(id: number, updateOrderStatus: UpdateOrderStatus): Promise<Order | null>;
 }
