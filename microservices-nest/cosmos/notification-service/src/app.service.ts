@@ -31,7 +31,7 @@ export class AppService implements OnModuleInit {
         if (message.value) {
           console.log('----- NOTIFICATION SERVICE -----', message.value.toString());
 
-          // Define your ASCII text
+          // Google Copy and Past Text Just for Fun!
           let asciiText = `
    _____ ____  _   _ ______ _____ _____  __  __ ______ _____  
   / ____/ __ \| \ | |  ____|_   _|  __ \|  \/  |  ____|  __ \ 

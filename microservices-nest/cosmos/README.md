@@ -160,6 +160,22 @@ $ npm run start:dev
 * FindAll: http://localhost:3002/customers
 
 
+## Notification-service
+* URL : http://localhost:3004
+```bash
+# Clone this repository
+$ git clone https://github.com/Jiffry-Shuhail/codeWithKrish.git
+
+# Go into the repository
+$ cd microservices-nest/cosmos/notification-service
+
+# Install dependencies
+$ npm install
+
+# Run the app
+$ npm run start
+```
+
 ## How To Use
 
 ## Configuration
