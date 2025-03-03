@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Injectable, NotFoundException, Post } from '@nestjs/common';
+import { BadRequestException, Body, Injectable, NotFoundException, OnModuleInit, Post } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Order } from './entity/order.entity';
 import { Repository } from 'typeorm';
@@ -7,9 +7,19 @@ import { createOrderDto } from './dto/create-order.dto';
 import { OrderStatus, UpdateOrderStatus } from './dto/update-order.dto';
 import { HttpService } from '@nestjs/axios';
 import { lastValueFrom } from 'rxjs';
+import { Kafka } from 'kafkajs';
 
 @Injectable()
-export class OrdersService {
+export class OrdersService implements OnModuleInit {
+    // OnModuleInit interface implement use onModuleInit method for This module creation time executing
+
+    // Kafka Event Drivent Object Create/Intilize
+    // AWS kafka Part IP and Port Eg: IP: 3.0.159.213 | PORT: 9092
+    // Possible to Docker image and Kafka in localhost to run
+    private readonly Kafka = new Kafka({ brokers: ['3.0.159.213:9092'] });
+    private readonly producer = this.Kafka.producer();
+    // Group ID is must in unique
+    private readonly consumer = this.Kafka.consumer({ groupId: 'jiffry-order-service' });
 
     private readonly inventoryServiceUrl = 'http://localhost:3001/products';
     private readonly customerServiceUrl = 'http://localhost:3002/customers';
@@ -21,19 +31,39 @@ export class OrdersService {
         private readonly orderItemsReporsitory: Repository<OrderItem>,
         private readonly httpService: HttpService
     ) { }
+    async onModuleInit() {
+        await this.producer.connect();
+        await this.consumer.connect();
+        await this.cosnsumeConfirmedOrders();
+    }
 
-    public async create(createOrderDto: createOrderDto): Promise<Order | null> {
+    public async create(createOrderDto: createOrderDto): Promise<any> {
         const { customerId, items } = createOrderDto;
 
+        let customerName = '';
         try {
             const request = this.httpService.get(`${this.customerServiceUrl}/${customerId}`);
             const response = await lastValueFrom(request);
             if (!response.data.id) {
                 throw new BadRequestException(`Customer ID ${customerId} is invalid.`);
+            } else {
+                customerName = response.data.name;
             }
         } catch (error) {
             throw new BadRequestException(`Error checking Customer for Customer ID ${customerId}: ${error.message}`);
         }
+
+        // Produce order an Event
+        // SEND IS START
+        this.producer.send({
+            topic: 'jiffry.order.create',
+            messages: [{ value: JSON.stringify({ customerId, customerName, items }) }]
+        });
+        // SEND IS END
+
+        return { message: `Order is placed. waiting inventory service to process` };
+
+        /* THE COMMENTED LOGIC PART WILL HANDLING KAFKA EVENT DRIVEN THORUGH
 
         // Inside the not Allow any loop|Ierator except For loop
         // So I used the For for iterating
@@ -89,6 +119,8 @@ export class OrdersService {
             where: { id: savedOrder.id },
             relations: ['items'],
         });
+
+        */
     }
 
     public async fetch(id: number): Promise<Order | null> {
@@ -147,5 +179,34 @@ export class OrdersService {
 
 
         return await this.ordeReporsitory.save(order);
+    }
+
+    async cosnsumeConfirmedOrders() {
+        // Producer send the event mention with topic name it's unique, and need to subscribe the cosumer then it will cathup
+        await this.consumer.subscribe({ topic: 'jiffry.order.inventory.update', fromBeginning: true });
+
+        // Once consumer is subcribe the topic event then we need to call and wrtie logic inside run->method
+        await this.consumer.run({
+            eachMessage: async ({ message }) => {
+
+                if (message.value) {
+                    console.log('----- ORDER SERVICE -----', message.value.toString());
+
+                    const { customerId, items } = JSON.parse(message.value.toString());
+
+                    const order = this.ordeReporsitory.create({ customerId, status: OrderStatus.CONFIRMED });
+                    const savedOrder = await this.ordeReporsitory.save(order);
+
+                    const oderItems = items.map(({ productId, price, quantity }) => this.orderItemsReporsitory.create({ productId, price, quantity, order: savedOrder }));
+                    await this.orderItemsReporsitory.save(oderItems);
+
+                    await this.producer.send({
+                        topic: 'jiffry.order.confirmed',
+                        messages: [{ value:'Hey, Order is placed and Confirme!' }]
+                    });
+                }
+
+            }
+        })
     }
 }
