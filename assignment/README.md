@@ -171,7 +171,7 @@ $ npm run start:dev
 }
 ```
 * Fetch by City : http://localhost:3004/dispatch-locations/kandy
-* Release : http://localhost:3004/dispatch-locations/<XYZ-5678>/release
+* Release : http://localhost:3004/dispatch-locations/<'XYZ-5678'>/release
 
 ```bash
 # Clone this repository
