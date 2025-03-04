@@ -187,8 +187,8 @@ export class OrdersService implements OnModuleInit {
 
         // Once consumer is subcribe the topic event then we need to call and wrtie logic inside run->method
         await this.consumer.run({
+            
             eachMessage: async ({ message }) => {
-
                 if (message.value) {
                     console.log('----- ORDER SERVICE -----', message.value.toString());
 

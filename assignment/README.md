@@ -170,7 +170,8 @@ $ npm run start:dev
     "city": "Kandy"
 }
 ```
-* Create: http://localhost:3004/dispatch-locations/kandy
+* Fetch by City : http://localhost:3004/dispatch-locations/kandy
+* Release : http://localhost:3004/dispatch-locations/<XYZ-5678>/release
 
 ```bash
 # Clone this repository

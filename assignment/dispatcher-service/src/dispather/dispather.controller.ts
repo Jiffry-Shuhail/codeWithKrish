@@ -22,4 +22,9 @@ export class DispatherController {
   async findOne(@Param('city') city: string):Promise<Dispather[]|[]> {
     return await this.dispatherService.findOne(city);
   }
+  
+  @Get(':vehicle_number/release')
+  async unlock(@Param('vehicle_number') vehicle_number: string):Promise<any> {
+    return await this.dispatherService.unlock(vehicle_number);
+  }
 }

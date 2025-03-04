@@ -44,6 +44,12 @@ export class DispatherService implements OnModuleInit {
     return dispathers;
   }
 
+  async unlock(vehicle_number:string):Promise<any>{
+    const lockKey = `jiffry:dispatcher:${vehicle_number}:lock`;
+    await this.redis.del(lockKey);
+    return {message:'Order Delivered'}
+  }
+
   async dispatch() {
     // Producer send the event mention with topic name it's unique, and need to subscribe the cosumer then it will cathup
     await this.consumer.subscribe({ topic: 'jiffry.order.confirmed', fromBeginning: true });
