@@ -21,10 +21,14 @@ const order_item_entity_1 = require("./entity/order-item.entity");
 const update_order_dto_1 = require("./dto/update-order.dto");
 const axios_1 = require("@nestjs/axios");
 const rxjs_1 = require("rxjs");
+const kafkajs_1 = require("kafkajs");
 let OrdersService = class OrdersService {
     ordeReporsitory;
     orderItemsReporsitory;
     httpService;
+    Kafka = new kafkajs_1.Kafka({ brokers: ['3.0.159.213:9092'] });
+    producer = this.Kafka.producer();
+    consumer = this.Kafka.consumer({ groupId: 'jiffry-order-service' });
     inventoryServiceUrl = 'http://localhost:3001/products';
     customerServiceUrl = 'http://localhost:3002/customers';
     constructor(ordeReporsitory, orderItemsReporsitory, httpService) {
@@ -32,54 +36,32 @@ let OrdersService = class OrdersService {
         this.orderItemsReporsitory = orderItemsReporsitory;
         this.httpService = httpService;
     }
+    async onModuleInit() {
+        await this.producer.connect();
+        await this.consumer.connect();
+        await this.cosnsumeConfirmedOrders();
+    }
     async create(createOrderDto) {
         const { customerId, items } = createOrderDto;
+        let customerName = '';
         try {
             const request = this.httpService.get(`${this.customerServiceUrl}/${customerId}`);
             const response = await (0, rxjs_1.lastValueFrom)(request);
             if (!response.data.id) {
                 throw new common_1.BadRequestException(`Customer ID ${customerId} is invalid.`);
             }
+            else {
+                customerName = response.data.name;
+            }
         }
         catch (error) {
             throw new common_1.BadRequestException(`Error checking Customer for Customer ID ${customerId}: ${error.message}`);
         }
-        for (const item of items) {
-            try {
-                const request = this.httpService.get(`${this.inventoryServiceUrl}/${item.productId}/validate?quantity=${item.quantity}`);
-                const response = await (0, rxjs_1.lastValueFrom)(request);
-                if (!response.data.available) {
-                    throw new common_1.BadRequestException(`Product ID ${item.productId} is out of stock.`);
-                }
-            }
-            catch (error) {
-                throw new common_1.BadRequestException(`Error checking stock for Product ID ${item.productId}: ${error.message}`);
-            }
-        }
-        const order = this.ordeReporsitory.create({ customerId });
-        const savedOrder = await this.ordeReporsitory.save(order);
-        const orderItems = items.map(({ productId, price, quantity }) => this.orderItemsReporsitory.create({
-            productId, price, quantity,
-            order: savedOrder
-        }));
-        const savedOrderItems = await this.orderItemsReporsitory.save(orderItems);
-        console.log(savedOrderItems);
-        for (const item of savedOrderItems) {
-            try {
-                const request = this.httpService.patch(`${this.inventoryServiceUrl}/${item.productId}/reduce`, { quantity: item.quantity });
-                const response = await (0, rxjs_1.lastValueFrom)(request);
-                if (!response.data.id) {
-                    throw new common_1.BadRequestException(`Product ID ${item.productId} is not found.`);
-                }
-            }
-            catch (error) {
-                throw new common_1.BadRequestException(`Error checking stock reduing for Product ID ${item.productId}: ${error.message}`);
-            }
-        }
-        return this.ordeReporsitory.findOne({
-            where: { id: savedOrder.id },
-            relations: ['items'],
+        this.producer.send({
+            topic: 'jiffry.order.create',
+            messages: [{ value: JSON.stringify({ customerId, customerName, items }) }]
         });
+        return { message: `Order is placed. waiting inventory service to process` };
     }
     async fetch(id) {
         return await this.ordeReporsitory.findOne({
@@ -127,6 +109,25 @@ let OrdersService = class OrdersService {
             throw new common_1.BadRequestException(`order status cannot be changed when its delivered`);
         }
         return await this.ordeReporsitory.save(order);
+    }
+    async cosnsumeConfirmedOrders() {
+        await this.consumer.subscribe({ topic: 'jiffry.order.inventory.update', fromBeginning: true });
+        await this.consumer.run({
+            eachMessage: async ({ message }) => {
+                if (message.value) {
+                    console.log('----- ORDER SERVICE -----', message.value.toString());
+                    const { customerId, items } = JSON.parse(message.value.toString());
+                    const order = this.ordeReporsitory.create({ customerId, status: update_order_dto_1.OrderStatus.CONFIRMED });
+                    const savedOrder = await this.ordeReporsitory.save(order);
+                    const oderItems = items.map(({ productId, price, quantity }) => this.orderItemsReporsitory.create({ productId, price, quantity, order: savedOrder }));
+                    await this.orderItemsReporsitory.save(oderItems);
+                    await this.producer.send({
+                        topic: 'jiffry.order.confirmed',
+                        messages: [{ value: 'Hey, Order is placed and Confirme!' }]
+                    });
+                }
+            }
+        });
     }
 };
 exports.OrdersService = OrdersService;
